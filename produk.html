@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk - Koperasi SMK MHC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    
+    <style>
+        body { font-family: 'Times New Roman', Times, serif; background-color: #fffdf4; }
+        .sidebar-custom { width: 280px; height: 100vh; background-color: #fff3cd !important; color: #333 !important; position: sticky; top: 0; }
+        .sidebar-custom .nav-link { color: #5c4000 !important; border-radius: 8px; margin-bottom: 5px; }
+        .sidebar-custom .nav-link:hover, .sidebar-custom .nav-link.active { background-color: #ffecb5 !important; color: #000 !important; transform: translateX(5px); }
+        .navbar-custom { background-color: #ffc107 !important; }
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link { color: #212529 !important; font-weight: bold; }
+        .card-container { background: #fffde7; border: 2px solid #ffeeba; border-radius: 16px; min-height: 85vh; }
+        .product-card { background: #fff; border: 2px solid #ffeeba; border-radius: 12px; transition: 0.2s; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body onload="initProdukPage()">
+
+    <script>
+        // Cek autentikasi login (Proteksi Halaman)
+        let currentUser = JSON.parse(localStorage.getItem('koperasi_current_user'));
+        if (!currentUser) {
+            alert('Anda belum masuk, silakan login terlebih dahulu!');
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Koperasi Sekolah</a>
+            <div class="collapse navbar-collapse justify-content-between">
+                <form class="d-flex mx-auto w-50" onsubmit="event.preventDefault(); filterProdukCards();">
+                    <input class="form-control me-2 rounded-pill" type="search" id="searchProductInput" placeholder="Cari seragam atau atribut sekolah..." onkeyup="filterProdukCards()">
+                    <button class="btn btn-dark rounded-pill px-3" type="submit"><i class="bi bi-search"></i></button>
+                </form>
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <button class="nav-link position-relative px-3 border-0 bg-transparent" data-bs-toggle="modal" data-bs-target="#cartModal" title="Keranjang">
+                            <i class="bi bi-cart4 fs-5"></i>
+                            <span id="badgeCart" class="position-absolute top-2 start-75 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative px-3" href="#" data-bs-toggle="modal" data-bs-target="#notifModal" title="Notifikasi">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span class="position-absolute top-2 start-75 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <img src="logo.mhc.jpeg" alt="Logo" width="30" height="30" style="border-radius: 50%; object-fit: cover;"> <span id="navUserEmail">Profil</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="info.html">Pengaturan Akun</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logoutUser()">Keluar</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex">
+        <div class="d-flex flex-column flex-shrink-0 p-3 sidebar-custom shadow-sm">
+            <a href="home.html" class="d-flex align-items-center mb-3 text-dark text-decoration-none">
+                <div class="logo text-center w-100">
+                    <img src="logo.mhc.jpeg" alt="Logo" width="80" height="80" style="border-radius: 50%; object-fit: cover;"><br>
+                    <span class="fs-6 fw-bold mt-2 d-block text-dark">Smk Muthia Harapan Cicalengka</span>
+                </div>
+            </a>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li><a href="home.html" class="nav-link"><i class="bi bi-house-door me-2"></i> Beranda</a></li>
+                <li><a href="produk.html" class="nav-link active"><i class="bi bi-box-seam me-2"></i> Produk</a></li>
+                <li><a href="riwayat.html" class="nav-link"><i class="bi bi-clock-history me-2"></i> Riwayat transaksi</a></li>
+                <li><a href="laporan.html" class="nav-link"><i class="bi bi-file-earmark-text me-2"></i> Laporan</a></li>
+                <li><a href="info.html" class="nav-link"><i class="bi bi-info-circle me-2"></i> Informasi siswa</a></li>
+                <li><a href="contact.html" class="nav-link"><i class="bi bi-headset me-2"></i> Contact</a></li>
+            </ul>
+        </div>
+
+        <div class="p-4 w-100">
+            <div class="card-container p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold text-dark mb-0">Katalog Produk Seragam</h3>
+                    <button class="btn btn-warning fw-bold px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#cartModal">
+                        <i class="bi bi-cart3 me-1"></i> Lihat Keranjang (<span id="cartCountSpan">0</span>)
+                    </button>
+                </div>
+
+                <div class="row g-4" id="productListGrid">
+                    <!-- Produk 1 -->
+                    <div class="col-md-4 product-item" data-name="seragam putih abu">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="putih.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Seragam Putih Abu</h5>
+                                <p class="text-muted small mb-2">Setelan lengkap atasan & bawahan kualitas premium.</p>
+                                <h5 class="text-success fw-bold">Rp 77.500</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Seragam Putih Abu', 77500, 'putih.jpeg', 'Setelan lengkap atasan & bawahan kualitas premium.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 2 -->
+                    <div class="col-md-4 product-item" data-name="seragam pramuka">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="pramuka.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Seragam Pramuka</h5>
+                                <p class="text-muted small mb-2">Bahan drill kuat, adem, dan nyaman dipakai seharian.</p>
+                                <h5 class="text-success fw-bold">Rp 46.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Seragam Pramuka', 46000, 'pramuka.jpeg', 'Bahan drill kuat, adem, dan nyaman dipakai seharian.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 3 -->
+                    <div class="col-md-4 product-item" data-name="seragam batik">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="batik.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Seragam Batik</h5>
+                                <p class="text-muted small mb-2">Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.</p>
+                                <h5 class="text-success fw-bold">Rp 33.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Seragam Batik', 33000, 'batik.jpeg', 'Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 4 -->
+                    <div class="col-md-4 product-item" data-name="seragam jurusan tbsm tsm">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="tsm.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Seragam Jurusan Tbsm</h5>
+                                <p class="text-muted small mb-2">Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.</p>
+                                <h5 class="text-success fw-bold">Rp 33.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Seragam Jurusan Tbsm', 33000, 'tsm.jpeg', 'Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 5 -->
+                    <div class="col-md-4 product-item" data-name="seragam jurusan rpl">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="rpl.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Seragam Jurusan Rpl</h5>
+                                <p class="text-muted small mb-2">Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.</p>
+                                <h5 class="text-success fw-bold">Rp 33.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Seragam Jurusan Rpl', 33000, 'rpl.jpeg', 'Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 6 -->
+                    <div class="col-md-4 product-item" data-name="baju olahraga olga">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="olga.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Baju Olahraga</h5>
+                                <p class="text-muted small mb-2">Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.</p>
+                                <h5 class="text-success fw-bold">Rp 33.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Baju Olahraga', 33000, 'olga.jpeg', 'Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                    <!-- Produk 7 -->
+                    <div class="col-md-4 product-item" data-name="almamater muthia almet">
+                        <div class="product-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <img src="almet.jpeg" class="rounded mb-3 object-fit-cover" height="180">
+                            <div>
+                                <h5 class="fw-bold mb-1">Almamater Muthia</h5>
+                                <p class="text-muted small mb-2">Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.</p>
+                                <h5 class="text-success fw-bold">Rp 33.000</h5>
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="openOrderModal('Almamater Muthia', 33000, 'almet.jpeg', 'Motif khas sekolah resmi SMK Muthia Harapan Cicalengka.')"><i class="bi bi-bag-check me-1"></i> Pesan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail & Pemesanan Produk -->
+    <div class="modal fade" id="orderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold" id="orderModalTitle">Detail Produk</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="modalProductName">
+                    <input type="hidden" id="modalProductPrice">
+                    <input type="hidden" id="modalProductImg">
+
+                    <div class="text-center mb-3">
+                        <img id="modalImgPreview" src="" class="rounded object-fit-cover shadow-sm" width="160" height="160">
+                    </div>
+
+                    <h4 class="fw-bold text-center mb-1" id="modalTitlePreview"></h4>
+                    <h5 class="text-success fw-bold text-center mb-3" id="modalPricePreview"></h5>
+                    <p class="text-muted small text-center mb-3 px-3" id="modalDescPreview"></p>
+                    
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Jenis Kelamin:</label>
+                        <select id="selectGender" class="form-select form-select-sm">
+                            <option value="Cowok">Cowok (Putra)</option>
+                            <option value="Cewek">Cewek (Putri)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Ukuran (Size):</label>
+                        <select id="selectSize" class="form-select form-select-sm">
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Jumlah (Qty):</label>
+                        <div class="input-group input-group-sm w-50">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustModalQty(-1)">-</button>
+                            <input type="number" id="modalQtyInput" class="form-control text-center fw-bold" value="1" min="1" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustModalQty(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-warning fw-bold px-4" onclick="confirmAddToCart()">Masukkan ke Keranjang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Keranjang Belanja -->
+    <div class="modal fade" id="cartModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold">Keranjang Belanja Koperasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Harga</th>
+                                    <th>Jumlah</th>
+                                    <th>Subtotal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                        <h5 class="fw-bold mb-0">Total Pembayaran: <span id="cartTotalPrice" class="text-success">Rp 0</span></h5>
+                        <div>
+                            <label class="small fw-bold me-1">Metode:</label>
+                            <select id="paymentMethod" class="form-select form-select-sm d-inline-block w-auto">
+                                <option value="Tunai">Tunai</option>
+                                <option value="Non-tunai">Non-tunai</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCart()">Kosongkan Keranjang</button>
+                    <button type="button" class="btn btn-warning fw-bold px-4" onclick="checkoutOrder()">Checkout & Pesan Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Notifikasi -->
+    <div class="modal fade" id="notifModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning"><h5 class="modal-title fw-bold">Notifikasi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body"><p class="mb-0">Pilih produk dan lakukan checkout untuk memesan barang.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function initProdukPage() {
+            let displayName = currentUser.nama || currentUser.name || currentUser.email;
+            document.getElementById('navUserEmail').innerText = displayName;
+            renderCart();
+        }
+
+        // Fungsi Pencarian Produk Real-Time
+        function filterProdukCards() {
+            let keyword = document.getElementById('searchProductInput').value.toLowerCase();
+            let items = document.querySelectorAll('.product-item');
+            items.forEach(el => {
+                let name = el.getAttribute('data-name').toLowerCase();
+                if (name.includes(keyword)) {
+                    el.style.display = "block";
+                } else {
+                    el.style.display = "none";
+                }
+            });
+        }
+
+        function getCartKey() {
+            let userIdentifier = currentUser.email;
+            return `koperasi_cart_${userIdentifier}`;
+        }
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem(getCartKey())) || [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem(getCartKey(), JSON.stringify(cart));
+            renderCart();
+        }
+
+        function openOrderModal(name, price, img, desc) {
+            document.getElementById('modalProductName').value = name;
+            document.getElementById('modalProductPrice').value = price;
+            document.getElementById('modalProductImg').value = img;
+            
+            document.getElementById('orderModalTitle').innerText = "Detail Produk - " + name;
+            document.getElementById('modalTitlePreview').innerText = name;
+            document.getElementById('modalPricePreview').innerText = "Rp " + price.toLocaleString();
+            document.getElementById('modalDescPreview').innerText = desc;
+            document.getElementById('modalImgPreview').src = img;
+            document.getElementById('modalQtyInput').value = 1;
+            document.getElementById('selectGender').value = "Cowok";
+            document.getElementById('selectSize').value = "S";
+
+            let myModal = new bootstrap.Modal(document.getElementById('orderModal'));
+            myModal.show();
+        }
+
+        function adjustModalQty(change) {
+            let qtyInput = document.getElementById('modalQtyInput');
+            let currentQty = parseInt(qtyInput.value) + change;
+            if (currentQty >= 1) {
+                qtyInput.value = currentQty;
+            }
+        }
+
+        function confirmAddToCart() {
+            let name = document.getElementById('modalProductName').value;
+            let price = parseInt(document.getElementById('modalProductPrice').value);
+            let img = document.getElementById('modalProductImg').value;
+            let gender = document.getElementById('selectGender').value;
+            let size = document.getElementById('selectSize').value;
+            let qty = parseInt(document.getElementById('modalQtyInput').value);
+
+            let fullName = `${name} (${gender}, Size: ${size})`;
+
+            let cart = getCart();
+            let found = cart.find(item => item.name === fullName);
+            if(found) {
+                found.qty += qty;
+            } else {
+                cart.push({ name: fullName, price: price, qty: qty, img: img });
+            }
+            saveCart(cart);
+
+            let orderModalEl = document.getElementById('orderModal');
+            let modalInstance = bootstrap.Modal.getInstance(orderModalEl);
+            modalInstance.hide();
+
+            alert(`${qty} pcs ${fullName} berhasil ditambahkan ke keranjang!`);
+        }
+
+        function renderCart() {
+            let cart = getCart();
+            let tbody = document.getElementById('cartTableBody');
+            tbody.innerHTML = "";
+            let totalBadge = 0;
+            let grandTotal = 0;
+
+            cart.forEach((item, index) => {
+                let subtotal = item.price * item.qty;
+                totalBadge += item.qty;
+                grandTotal += subtotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-start"><img src="${item.img}" width="40" height="40" class="rounded me-2 object-fit-cover">${item.name}</td>
+                        <td>Rp ${item.price.toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary px-1 py-0" onclick="updateQty(${index}, -1)">-</button>
+                            <span class="mx-2">${item.qty}</span>
+                            <button class="btn btn-sm btn-outline-secondary px-1 py-0" onclick="updateQty(${index}, 1)">+</button>
+                        </td>
+                        <td>Rp ${subtotal.toLocaleString()}</td>
+                        <td><button class="btn btn-sm text-danger" onclick="removeItem(${index})"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('badgeCart').innerText = totalBadge;
+            let cartCountSpan = document.getElementById('cartCountSpan');
+            if(cartCountSpan) cartCountSpan.innerText = totalBadge;
+            document.getElementById('cartTotalPrice').innerText = "Rp " + grandTotal.toLocaleString();
+        }
+
+        function updateQty(index, change) {
+            let cart = getCart();
+            cart[index].qty += change;
+            if(cart[index].qty <= 0) cart.splice(index, 1);
+            saveCart(cart);
+        }
+
+        function removeItem(index) {
+            let cart = getCart();
+            cart.splice(index, 1);
+            saveCart(cart);
+        }
+
+        function clearCart() {
+            localStorage.removeItem(getCartKey());
+            renderCart();
+        }
+
+        function checkoutOrder() {
+            let cart = getCart();
+            if(cart.length === 0) {
+                alert("Keranjang masih kosong!");
+                return;
+            }
+
+            let metode = document.getElementById('paymentMethod').value;
+            let userIdentifier = currentUser.email;
+            let riwayatKey = `koperasi_riwayat_${userIdentifier}`;
+            let existingRiwayat = JSON.parse(localStorage.getItem(riwayatKey)) || [];
+            
+            let today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            cart.forEach(item => {
+                let newTx = {
+                    no: existingRiwayat.length + 1,
+                    tanggal: today,
+                    kode: Math.floor(100000000 + Math.random() * 900000000).toString(),
+                    produk: item.name,
+                    jumlah: item.qty,
+                    total: (item.price * item.qty).toLocaleString(),
+                    metode: metode,
+                    img: item.img
+                };
+                existingRiwayat.unshift(newTx);
+            });
+
+            localStorage.setItem(riwayatKey, JSON.stringify(existingRiwayat));
+            localStorage.removeItem(getCartKey());
+            renderCart();
+            bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+            alert("Pesanan berhasil diproses dan otomatis masuk ke Riwayat Transaksi!");
+            window.location.href = 'riwayat.html';
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('koperasi_current_user');
+            alert('Berhasil keluar akun!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
